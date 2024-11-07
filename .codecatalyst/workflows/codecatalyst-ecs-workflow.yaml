@@ -12,7 +12,7 @@ Actions:
       Connections:
         - Role: CodeCatalystWorkflowDevelopmentRole-kss-test
           Name: "058029412961"
-      Name: Pre-prod
+      Name: pre-prod
     Inputs:
       Sources:
         - WorkflowSource
@@ -49,7 +49,7 @@ Actions:
       Connections:
         - Role: CodeCatalystWorkflowDevelopmentRole-kss-test 
           Name: "058029412961"
-      Name: Pre-prod
+      Name: pre-prod
     Inputs:
       Sources:
         - WorkflowSource
