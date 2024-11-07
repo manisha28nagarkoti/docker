@@ -1,0 +1,83 @@
+Name: codecatalyst-ecs-workflow
+SchemaVersion: 1.0
+
+Triggers:
+  - Type: PUSH
+    Branches:
+      - main
+Actions:
+  BuildBackend:
+    Identifier: aws/build@v1
+    Environment:
+      Connections:
+        - Role: CodeCatalystWorkflowDevelopmentRole-kss-test
+          Name: "058029412961"
+      Name: Pre-prod
+    Inputs:
+      Sources:
+        - WorkflowSource
+      Variables:
+        - Name: REPOSITORY_URI
+          Value: 058029412961.dkr.ecr.ap-south-1.amazonaws.com/test-code-catalyst
+        - Name: IMAGE_TAG
+          Value: ${WorkflowSource.CommitId}
+    Configuration:
+      Steps:
+        # Pre-build steps
+        - Run: echo Logging in to Amazon ECR...
+        - Run: aws --version
+        - Run: aws ecr get-login-password --region ap-south-1 | docker login --username
+            AWS --password-stdin 058029412961.dkr.ecr.ap-south-1.amazonaws.com
+        # Build steps
+        - Run: echo Build started on `date`
+        - Run: echo Building the Docker image...
+        - Run: docker build -t $REPOSITORY_URI:latest .
+        - Run: docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+        # Post-build steps
+        - Run: echo Build completed on `date`
+        - Run: echo Pushing the Docker images...
+        - Run: docker push $REPOSITORY_URI:latest
+        - Run: docker push $REPOSITORY_URI:$IMAGE_TAG
+        # Create task definition file
+
+
+  Deploy:
+    Identifier: aws/build@v1
+    DependsOn:
+      - BuildBackend
+    Environment:
+      Connections:
+        - Role: CodeCatalystWorkflowDevelopmentRole-kss-test 
+          Name: "058029412961"
+      Name: Pre-prod
+    Inputs:
+      Sources:
+        - WorkflowSource
+      Variables:
+        - Name: REPOSITORY_URI
+          Value: 058029412961.dkr.ecr.ap-south-1.amazonaws.com/test-code-catalyst
+        - Name: IMAGE_TAG
+          Value: ${WorkflowSource.CommitId}
+    Configuration:
+      Steps:
+        - Run: >-
+            NEW_DOCKER_IMAGE="${REPOSITORY_URI}:${IMAGE_TAG}"
+
+            OLD_TASK_DEF=$(aws ecs describe-task-definition --task-definition task-def-code --output json --region ap-south-1 )
+
+            NEW_TASK_DEF=$(echo $OLD_TASK_DEF | jq --arg NDI $NEW_DOCKER_IMAGE '.taskDefinition.containerDefinitions[0].image=$NDI')
+
+            FINAL_TASK=$(echo $NEW_TASK_DEF | jq '.taskDefinition|{requiresCompatibilities: .requiresCompatibilities, family: .family, networkMode: .networkMode, volumes: .volumes, containerDefinitions: .containerDefinitions, placementConstraints: .placementConstraints, taskRoleArn: .taskRoleArn, executionRoleArn: .executionRoleArn,memory: .memory}')
+
+            aws ecs register-task-definition --family task-def-code  --region ap-south-1 --cli-input-json "$(echo $FINAL_TASK)"
+
+            aws ecs update-service --service nginx --task-definition task-def-code --cluster code-catalyst --region ap-south-1
+
+            aws ecs wait services-stable --cluster code-catalyst --services nginx --region ap-south-1
+
+            aws ecs update-service --service nginx --task-definition task-def-code --cluster code-catalyst --region ap-south-1
+
+            aws ecs wait services-stable --cluster code-catalyst --services nginx --region ap-south-1
+    Compute:
+      Type: EC2
+    Timeout: 5
