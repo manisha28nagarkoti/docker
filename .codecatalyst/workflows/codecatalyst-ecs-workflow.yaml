@@ -67,7 +67,7 @@ Actions:
 
             NEW_TASK_DEF=$(echo $OLD_TASK_DEF | jq --arg NDI $NEW_DOCKER_IMAGE '.taskDefinition.containerDefinitions[0].image=$NDI')
 
-            FINAL_TASK=$(echo $NEW_TASK_DEF | jq '.taskDefinition|{requiresCompatibilities: .requiresCompatibilities, family: .family, networkMode: .networkMode, volumes: .volumes, containerDefinitions: .containerDefinitions, placementConstraints: .placementConstraints, taskRoleArn: .taskRoleArn, executionRoleArn: .executionRoleArn,memory: .memory}')
+            FINAL_TASK=$(echo $NEW_TASK_DEF | jq '.taskDefinition|{requiresCompatibilities: .requiresCompatibilities,cpu: .cpu , family: .family, networkMode: .networkMode, volumes: .volumes, containerDefinitions: .containerDefinitions, placementConstraints: .placementConstraints, taskRoleArn: .taskRoleArn, executionRoleArn: .executionRoleArn,memory: .memory}')
 
             aws ecs register-task-definition --family kss-code-catalyst  --region ap-south-1 --cli-input-json "$(echo $FINAL_TASK)"
 
