@@ -63,21 +63,21 @@ Actions:
         - Run: >-
             NEW_DOCKER_IMAGE="${REPOSITORY_URI}:${IMAGE_TAG}"
 
-            OLD_TASK_DEF=$(aws ecs describe-task-definition --task-definition task-def-code --output json --region ap-south-1 )
+            OLD_TASK_DEF=$(aws ecs describe-task-definition --task-definition kss-code-catalyst --output json --region ap-south-1 )
 
             NEW_TASK_DEF=$(echo $OLD_TASK_DEF | jq --arg NDI $NEW_DOCKER_IMAGE '.taskDefinition.containerDefinitions[0].image=$NDI')
 
             FINAL_TASK=$(echo $NEW_TASK_DEF | jq '.taskDefinition|{requiresCompatibilities: .requiresCompatibilities, family: .family, networkMode: .networkMode, volumes: .volumes, containerDefinitions: .containerDefinitions, placementConstraints: .placementConstraints, taskRoleArn: .taskRoleArn, executionRoleArn: .executionRoleArn,memory: .memory}')
 
-            aws ecs register-task-definition --family task-def-code  --region ap-south-1 --cli-input-json "$(echo $FINAL_TASK)"
+            aws ecs register-task-definition --family kss-code-catalyst  --region ap-south-1 --cli-input-json "$(echo $FINAL_TASK)"
 
-            aws ecs update-service --service nginx --task-definition task-def-code --cluster code-catalyst --region ap-south-1
+            aws ecs update-service --service nginx --task-definition kss-code-catalyst --cluster KSS-CodeCatalyst --region ap-south-1
 
-            aws ecs wait services-stable --cluster code-catalyst --services nginx --region ap-south-1
+            aws ecs wait services-stable --cluster KSS-CodeCatalyst --services nginx --region ap-south-1
 
-            aws ecs update-service --service nginx --task-definition task-def-code --cluster code-catalyst --region ap-south-1
+            aws ecs update-service --service nginx --task-definition kss-code-catalyst --cluster KSS-CodeCatalyst --region ap-south-1
 
-            aws ecs wait services-stable --cluster code-catalyst --services nginx --region ap-south-1
+            aws ecs wait services-stable --cluster KSS-CodeCatalyst --services nginx --region ap-south-1
     Compute:
       Type: EC2
     Timeout: 5
