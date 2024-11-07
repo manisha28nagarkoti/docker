@@ -10,9 +10,9 @@ Actions:
     Identifier: aws/build@v1
     Environment:
       Connections:
-        - Role: CodeCatalystWorkflowDevelopmentRole-kss-test
+        - Role: code-catalyst-deployment-role 
           Name: "058029412961"
-      Name: pre-prod
+      Name: dev
     Inputs:
       Sources:
         - WorkflowSource
@@ -47,9 +47,9 @@ Actions:
       - BuildBackend
     Environment:
       Connections:
-        - Role: CodeCatalystWorkflowDevelopmentRole-kss-test 
+        - Role: code-catalyst-deployment-role 
           Name: "058029412961"
-      Name: pre-prod
+      Name: dev
     Inputs:
       Sources:
         - WorkflowSource
